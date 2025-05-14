@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-redmine
+openpyxl
+pydantic
+schedule
+python-multipart
+email-validator
+python-dotenv
+apscheduler
