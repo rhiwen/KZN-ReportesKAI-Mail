@@ -27,67 +27,53 @@ def get_projects():
         return redmine.project.all()
 
 
-def safe_issues(project_id, start_date, end_date):
-    """Devuelve issues dentro de rango o lista vacía si no hay permiso."""
+def safe_issues(project_id):
+    """Devuelve issues con tipo de tarea 'KAI' o lista vacía si no hay permiso."""
     try:
-        issues = redmine.issue.filter(project_id=project_id, status_id="*")
-        return [i for i in issues if start_date <= i.updated_on <= end_date]
+        # Obtenemos todas las tareas del proyecto y filtramos por campo personalizado
+        all_issues = redmine.issue.filter(project_id=project_id, status_id="*")
+        # Filtramos las que en el campo custom "Tipo de tarea" tengan valor "KAI"
+        return [
+            i for i in all_issues 
+            if any(cf.name == "Tipo de tarea" and cf.value == "KAI" 
+                for cf in getattr(i, "custom_fields", []))
+        ]
     except (ForbiddenError, ResourceNotFoundError):
         return []
 
 
-def _safe_version(issue):
-    """Nombre de versión o 'Sin versión'."""
+def _safe_assigned_to(issue):
+    """Nombre del asignado o 'Sin asignar'."""
     try:
-        return issue.fixed_version.name
+        return issue.assigned_to.name
     except (AttributeError, ResourceAttrError):
-        return "Sin versión"
+        return "Sin asignar"
+
+
+def _format_date(date_obj):
+    """Formatea fecha como DD/MM/YYYY."""
+    if date_obj:
+        return date_obj.strftime("%d/%m/%Y")
+    return "N/A"
 
 
 # ───── Procesamiento principal ─────────────────────────
 def process_projects(projects):
-    today = datetime.today()
-    start_of_month = today.replace(day=1)
-    end_of_month = today
-
     data = []
+    
     for project in projects:
-        rec = {
-            "project_name": project.name,
-            "total_issues": 0,
-            "total_open_issues": 0,
-            "total_closed_issues": 0,
-            "issues_closed_this_month": 0,
-            "issues_opened_this_month": 0,
-            "total_hours": 0,
-            "versions": set(),
-        }
-
-        for issue in safe_issues(project.id, start_of_month, end_of_month):
-            rec["total_issues"] += 1
-
-            if issue.status.id in (1, 2, 8):  # abiertos
-                rec["total_open_issues"] += 1
-                if start_of_month <= issue.created_on <= end_of_month:
-                    rec["issues_opened_this_month"] += 1
-            else:                             # cerrados
-                rec["total_closed_issues"] += 1
-                if start_of_month <= issue.updated_on <= end_of_month:
-                    rec["issues_closed_this_month"] += 1
-
-            # horas imputadas
-            for entry in redmine.time_entry.filter(issue_id=issue.id):
-                rec["total_hours"] += round(entry.hours, 2)
-
-            # versión segura
-            rec["versions"].add(_safe_version(issue))
-
-        if rec["total_issues"] == 0:
-            continue  # sin datos útiles (o sin permisos)
-
-        rec["progress_percentage"] = (
-            f"{(rec['total_closed_issues'] / rec['total_issues'] * 100):.2f}%"
-        )
-        data.append(rec)
+        issues = safe_issues(project.id)
+        
+        for issue in issues:
+            # Por cada issue tipo KAI, creamos un registro en el formato solicitado
+            data.append({
+                "task_id": f"#{issue.id}",
+                "project_name": project.name,
+                "title": issue.subject,
+                "status": issue.status.name,
+                "assigned_to": _safe_assigned_to(issue),
+                "created_on": _format_date(getattr(issue, "created_on", None)),
+                "updated_on": _format_date(getattr(issue, "updated_on", None))
+            })
 
     return data

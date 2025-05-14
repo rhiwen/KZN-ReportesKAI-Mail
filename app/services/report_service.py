@@ -15,13 +15,18 @@ def generate_report(send_email: bool = True, background_tasks: Optional[Backgrou
     """Genera CSV/XLSX, devuelve HTML y opcionalmente envía email.
     Si `background_tasks` es None (ejecución del scheduler), el correo se envía inmediatamente.
     """
-    logging.info("🔄 Generando reporte…")
+    logging.info("🔄 Generando reporte de tareas KAI…")
 
     try:
         logging.info("📡 Obteniendo proyectos…")
         projects = get_projects()
         data = process_projects(projects)
-        logging.info("✅ Proyectos procesados: %s", len(data))
+        logging.info("✅ Tareas tipo KAI procesadas: %s", len(data))
+        
+        if not data:
+            logging.warning("⚠️ No se encontraron tareas tipo KAI")
+            return "<p>No se encontraron tareas tipo KAI</p>"
+            
     except (ForbiddenError, AuthError) as e:
         logging.error("🚫 Permisos insuficientes: %s", e)
         raise
@@ -34,7 +39,7 @@ def generate_report(send_email: bool = True, background_tasks: Optional[Backgrou
     html_content = xlsx_to_html(xlsx_file)
 
     if send_email:
-        subject = f"Reporte de Redmine {timestamp}"
+        subject = f"Reporte de Tareas KAI {timestamp}"
         if background_tasks is not None:
             logging.info("📨 Programando envío de email (BackgroundTasks)…")
             background_tasks.add_task(send_report_email, subject, html_content, [csv_file, xlsx_file])
@@ -42,7 +47,7 @@ def generate_report(send_email: bool = True, background_tasks: Optional[Backgrou
             logging.info("📨 Enviando email inmediatamente (scheduler)…")
             send_report_email(subject, html_content, [csv_file, xlsx_file])
 
-    logging.info("🎉 Reporte generado correctamente")
+    logging.info("🎉 Reporte de tareas KAI generado correctamente")
     return html_content
 
 def get_file(filename: str):

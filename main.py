@@ -24,7 +24,7 @@ from apscheduler.triggers.cron import CronTrigger
 from app.schemas import EmailRequest
 from app.services.report_service import generate_report, get_file
 
-app = FastAPI(title="Redmine Reporter API")
+app = FastAPI(title="Redmine KAI Tasks Reporter API")
 
 # 4. Scheduler diario
 report_time = os.getenv("REPORT_TIME", "10:00")
@@ -34,10 +34,10 @@ scheduler = BackgroundScheduler()
 
 def daily_job() -> None:
     """Genera y envía el reporte automáticamente (sin BackgroundTasks)."""
-    logging.info("⏰ Iniciando job programado diario")
+    logging.info("⏰ Iniciando job programado diario para tareas KAI")
     try:
         generate_report(send_email=True, background_tasks=None)
-        logging.info("✅ Job diario completado con éxito")
+        logging.info("✅ Job diario de tareas KAI completado con éxito")
     except Exception as exc:
         logging.exception("❌ Job diario falló: %s", exc)
 
@@ -45,14 +45,14 @@ def daily_job() -> None:
 scheduler.add_job(
     daily_job,
     CronTrigger(hour=hour, minute=minute, timezone="America/Argentina/Buenos_Aires"),
-    id="daily_report",
+    id="daily_report_kai",
 )
 scheduler.start()
 
 # 5. Endpoints
-@app.post("/generar-reporte", response_class=HTMLResponse)
+@app.post("/generar-reporte-kai", response_class=HTMLResponse)
 def generar_reporte(request: EmailRequest, background_tasks: BackgroundTasks):
-    logging.info("📥 Solicitud manual de reporte recibida")
+    logging.info("📥 Solicitud manual de reporte de tareas KAI recibida")
     return generate_report(request.send_email, background_tasks)
 
 

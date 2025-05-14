@@ -6,38 +6,32 @@ from openpyxl import Workbook, load_workbook
 os.makedirs("data", exist_ok=True)
 
 def save_files(data, timestamp):
-    csv_file = f"data/reporte_{timestamp}.csv"
-    xlsx_file = f"data/reporte_{timestamp}.xlsx"
+    csv_file = f"data/reporte_kai_{timestamp}.csv"
+    xlsx_file = f"data/reporte_kai_{timestamp}.xlsx"
 
-    with open(csv_file, mode='w', newline='') as file:
+    # Columnas del nuevo reporte
+    columns = ['TAREA', 'PROYECTO', 'TÍTULO', 'ESTADO', 'ASIGNADO A', 
+               'FH CREACION', 'FH ACTUALIZACION']
+
+    with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
-        writer.writerow([
-            'Nombre Proyecto', 'Total Issues', 'Issues Abiertos', 'Issues Cerrados',
-            'Issues Cerrados Este Mes', 'Issues Abiertos Este Mes',
-            'Horas Dedicadas', 'Avance (%)', 'Versión'
-        ])
+        writer.writerow(columns)
         for d in data:
             writer.writerow([
-                d['project_name'], d['total_issues'], d['total_open_issues'],
-                d['total_closed_issues'], d['issues_closed_this_month'],
-                d['issues_opened_this_month'], f"{d['total_hours']:.2f}",
-                d['progress_percentage'], ", ".join(d['versions'])
+                d['task_id'], d['project_name'], d['title'], d['status'],
+                d['assigned_to'], d['created_on'], d['updated_on']
             ])
 
     workbook = Workbook()
     sheet = workbook.active
-    sheet.append([
-        'Nombre Proyecto', 'Total Issues', 'Issues Abiertos', 'Issues Cerrados',
-        'Issues Cerrados Este Mes', 'Issues Abiertos Este Mes',
-        'Horas Dedicadas', 'Avance (%)', 'Versión'
-    ])
+    sheet.append(columns)
+    
     for d in data:
         sheet.append([
-            d['project_name'], d['total_issues'], d['total_open_issues'],
-            d['total_closed_issues'], d['issues_closed_this_month'],
-            d['issues_opened_this_month'], f"{d['total_hours']:.2f}",
-            d['progress_percentage'], ", ".join(d['versions'])
+            d['task_id'], d['project_name'], d['title'], d['status'],
+            d['assigned_to'], d['created_on'], d['updated_on']
         ])
+    
     workbook.save(xlsx_file)
 
     return csv_file, xlsx_file
@@ -45,8 +39,23 @@ def save_files(data, timestamp):
 def xlsx_to_html(xlsx_path):
     wb = load_workbook(xlsx_path)
     sheet = wb.active
-    html = '<table border="1">'
+    html = '<table border="1" style="border-collapse: collapse; width: 100%;">'
+    
+    # Estilos para la tabla HTML
+    html += '<style>'
+    html += 'th { background-color: #f2f2f2; padding: 8px; text-align: left; }'
+    html += 'td { padding: 8px; }'
+    html += 'tr:nth-child(even) { background-color: #f9f9f9; }'
+    html += '</style>'
+    
+    # Cabeceras con <th>
+    first_row = True
     for row in sheet.iter_rows(values_only=True):
-        html += '<tr>' + ''.join(f'<td>{cell}</td>' for cell in row) + '</tr>'
+        if first_row:
+            html += '<tr>' + ''.join(f'<th>{cell}</th>' for cell in row) + '</tr>'
+            first_row = False
+        else:
+            html += '<tr>' + ''.join(f'<td>{cell}</td>' for cell in row) + '</tr>'
+    
     html += '</table>'
     return html
