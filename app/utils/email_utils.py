@@ -23,40 +23,31 @@ def _ssl_context() -> ssl.SSLContext:
     return ctx
 
 
-def send_report_email(subject: str, html_content: str, files: list[str]) -> None:
-    # ---------- construir mensaje ----------
+def send_report_email(subject: str, html_content: str) -> None:
+    """Envía correo electrónico con el contenido HTML pero sin archivos adjuntos."""
+    # Construir mensaje
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"]    = EMAIL_SENDER
 
-    # limpia espacios y cadenas vacías
+    # Limpia espacios y cadenas vacías
     recipients = [addr.strip() for addr in EMAIL_RECEIVERS if addr.strip()]
     msg["To"] = ", ".join(recipients)
 
-    msg.set_content("Adjunto los reportes de Redmine.")
+    # Solo se envía el contenido HTML
     msg.add_alternative(html_content, subtype="html")
-
-    for file in files:
-        with open(file, "rb") as f:
-            data = f.read()
-            name = os.path.basename(file)
-            maintype, subtype = (
-                ("text", "csv") if name.endswith(".csv")
-                else ("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-            )
-            msg.add_attachment(data, maintype=maintype, subtype=subtype, filename=name)
 
     ctx = _ssl_context()
 
-    # ---------- enviar ----------
+    # Enviar
     if USE_STARTTLS:
         logging.info("📧 SMTP STARTTLS %s:%s", SMTP_SERVER, SMTP_PORT)
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30) as server:
             server.starttls(context=ctx)
             server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-            server.send_message(msg, to_addrs=recipients)   # <- lista explícita
+            server.send_message(msg, to_addrs=recipients)
     else:
         logging.info("📧 SMTP_SSL %s:%s", SMTP_SERVER, SMTP_PORT)
         with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=ctx, timeout=30) as server:
             server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-            server.send_message(msg, to_addrs=recipients)   # <- lista explícita
+            server.send_message(msg, to_addrs=recipients)

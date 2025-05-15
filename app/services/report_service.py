@@ -7,12 +7,12 @@ from fastapi import BackgroundTasks
 from redminelib.exceptions import ForbiddenError, AuthError
 
 from app.utils.redmine_client import get_projects, process_projects
-from app.utils.file_manager import save_files, xlsx_to_html
+from app.utils.file_manager import data_to_html
 from app.utils.email_utils import send_report_email
 
 
 def generate_report(send_email: bool = True, background_tasks: Optional[BackgroundTasks] = None):
-    """Genera CSV/XLSX, devuelve HTML y opcionalmente envía email.
+    """Genera HTML del reporte y opcionalmente envía email.
     Si `background_tasks` es None (ejecución del scheduler), el correo se envía inmediatamente.
     """
     logging.info("🔄 Generando reporte de tareas KAI…")
@@ -34,24 +34,27 @@ def generate_report(send_email: bool = True, background_tasks: Optional[Backgrou
         logging.exception("💥 Error inesperado: %s", e)
         raise
 
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    csv_file, xlsx_file = save_files(data, timestamp)
-    html_content = xlsx_to_html(xlsx_file)
+    # Convertir datos directamente a HTML sin archivos intermedios
+    html_content = data_to_html(data)
 
     if send_email:
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         subject = f"Reporte de Tareas KAI {timestamp}"
+        
         if background_tasks is not None:
             logging.info("📨 Programando envío de email (BackgroundTasks)…")
-            background_tasks.add_task(send_report_email, subject, html_content, [csv_file, xlsx_file])
+            background_tasks.add_task(send_report_email, subject, html_content)
         else:
             logging.info("📨 Enviando email inmediatamente (scheduler)…")
-            send_report_email(subject, html_content, [csv_file, xlsx_file])
+            send_report_email(subject, html_content)
 
     logging.info("🎉 Reporte de tareas KAI generado correctamente")
     return html_content
 
+
 def get_file(filename: str):
-    """Devuelve la ruta absoluta del archivo en /data o None si no existe."""
+    """Esta función ya no es necesaria sin la generación de archivos,
+    pero se mantiene por compatibilidad con las rutas existentes."""
     import os
     path = os.path.join("data", filename)
     return path if os.path.exists(path) else None

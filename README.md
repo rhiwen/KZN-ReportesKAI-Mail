@@ -10,8 +10,7 @@ Una solución automatizada basada en FastAPI para generar reportes de tareas KAI
 - Conexión con Redmine vía API
 - Filtra específicamente tareas tipo KAI en estado abierto
 - Excluye tareas en estados "8-QA Procesos" y "9-Realizado"
-- Exportación a CSV y XLSX
-- Conversión a HTML para visualización en el cuerpo del email
+- Generación de HTML directo para el cuerpo del email
 - Envío automático por email programado diariamente
 - Interfaz web simple para visualización de reportes
 
@@ -64,22 +63,18 @@ redmine_reporter_fastapi/
 │   ├── __init__.py
 │   ├── schemas.py                 # Modelos Pydantic
 │   ├── services/
-│   │   └── report_service.py      # Lógica principal de reporte
+│   │   └── report_service.py      # Lógica principal de reporte (simplificada)
 │   ├── utils/
 │   │   ├── redmine_client.py      # Acceso a Redmine y filtrado KAI
-│   │   ├── file_manager.py        # Guardado CSV/XLSX/HTML
-│   │   └── email_utils.py         # Envío de correo electrónico
-├── data/                          # Reportes generados (.csv, .xlsx)
-│   └── .gitkeep
-├── logs/                          # (futuro uso para logs)
-│   └── .gitkeep
+│   │   ├── file_manager.py        # Generación directa de HTML
+│   │   └── email_utils.py         # Envío de correo electrónico (sin adjuntos)
 ├── main.py                        # FastAPI App y rutas + scheduler diario
 ├── requirements.txt
 ├── README.md
 ```
 ## 📧 Envío de Correos
 
-El sistema adjunta automáticamente los archivos generados y envía el reporte a los destinatarios definidos. El envío se realiza:
+El sistema envía el reporte directamente en el cuerpo HTML del correo (sin archivos adjuntos). El envío se realiza:
 - Manualmente mediante el endpoint `/generar-reporte-kai`
 - Automáticamente todos los días a la hora definida en `REPORT_TIME`
 

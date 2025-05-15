@@ -17,12 +17,11 @@ logging.basicConfig(
 # 3. FastAPI + APScheduler
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.responses import HTMLResponse
-from starlette.responses import FileResponse
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.schemas import EmailRequest
-from app.services.report_service import generate_report, get_file
+from app.services.report_service import generate_report
 
 app = FastAPI(title="Redmine KAI Tasks Reporter API")
 
@@ -55,12 +54,6 @@ def generar_reporte(request: EmailRequest, background_tasks: BackgroundTasks):
     logging.info("📥 Solicitud manual de reporte de tareas KAI recibida")
     return generate_report(request.send_email, background_tasks)
 
-
-@app.get("/descargar/{filename}")
-def descargar_archivo(filename: str):
-    logging.info("📤 Descarga solicitada: %s", filename)
-    path = get_file(filename)
-    return FileResponse(path) if path else {"error": "Archivo no encontrado"}
 
 # Nuevo endpoint - web
 @app.get("/", response_class=HTMLResponse)

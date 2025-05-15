@@ -12,7 +12,7 @@ PASSWORD = "cRv@4fL6xG"
 msg = EmailMessage()
 msg["Subject"] = "✅ Prueba de SMTP exitosa"
 msg["From"] = EMAIL
-msg["To"] = 'rrolon@kaizen2b.com' #EMAIL  # Puedes enviarlo a ti mismo para testear #msg["To"] = ", ".join(["destino1@correo.com", "destino2@otro.com"])
+msg["To"] = 'rrolon@kaizen2b.com' #EMAIL  # Puede enviarlo a sí mismo para testear #msg["To"] = ", ".join(["destino1@correo.com", "destino2@otro.com"])
 msg.set_content("Este es un correo de prueba enviado desde Python.")
 
 try:
