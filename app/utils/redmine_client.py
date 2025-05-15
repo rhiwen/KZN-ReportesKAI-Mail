@@ -28,15 +28,16 @@ def get_projects():
 
 
 def safe_issues(project_id):
-    """Devuelve issues con tipo de tarea 'KAI' o lista vacía si no hay permiso."""
+    """Devuelve issues tipo 'KAI' excepto los que tienen estado 'QA Procesos' o 'Realizado'."""
     try:
-        # Obtenemos todas las tareas del proyecto y filtramos por campo personalizado
-        all_issues = redmine.issue.filter(project_id=project_id, status_id="*")
-        # Filtramos las que en el campo custom "Tipo de tarea" tengan valor "KAI"
+        issues = redmine.issue.filter(project_id=project_id)  # sin status_id
         return [
-            i for i in all_issues 
-            if any(cf.name == "Tipo de tarea" and cf.value == "KAI" 
-                for cf in getattr(i, "custom_fields", []))
+            i for i in issues
+            if any(
+                cf.name == "Tipo de tarea" and cf.value == "KAI"
+                for cf in getattr(i, "custom_fields", [])
+            )
+            and i.status.name not in ["8-QA Procesos", "9-Realizado"]
         ]
     except (ForbiddenError, ResourceNotFoundError):
         return []

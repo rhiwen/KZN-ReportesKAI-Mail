@@ -61,3 +61,8 @@ def descargar_archivo(filename: str):
     logging.info("📤 Descarga solicitada: %s", filename)
     path = get_file(filename)
     return FileResponse(path) if path else {"error": "Archivo no encontrado"}
+
+# Nuevo endpoint - web
+@app.get("/", response_class=HTMLResponse)
+def vista_reporte():
+    return generate_report(send_email=False)

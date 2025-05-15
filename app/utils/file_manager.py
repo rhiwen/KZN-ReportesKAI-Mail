@@ -11,7 +11,7 @@ def save_files(data, timestamp):
 
     # Columnas del nuevo reporte
     columns = ['TAREA', 'PROYECTO', 'TÍTULO', 'ESTADO', 'ASIGNADO A', 
-               'FH CREACION', 'FH ACTUALIZACION']
+            'FH CREACION', 'FH ACTUALIZACION']
 
     with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
