@@ -11,7 +11,7 @@ def data_to_html(data):
     html += '</style>'
     
     # Columnas del reporte
-    columns = ['TAREA', 'PROYECTO', 'TÍTULO', 'ESTADO', 'ASIGNADO A', 
+    columns = ['TAREA', 'PROYECTO', 'TÍTULO', 'PRIORIDAD', 'ESTADO', 'ASIGNADO A', 
             'FH CREACION', 'FH ACTUALIZACION']
     
     # Cabeceras con <th>
@@ -23,6 +23,7 @@ def data_to_html(data):
         html += f'<td>{item["task_id"]}</td>'
         html += f'<td>{item["project_name"]}</td>'
         html += f'<td>{item["title"]}</td>'
+        html += f'<td>{item["priority"]}</td>'
         html += f'<td>{item["status"]}</td>'
         html += f'<td>{item["assigned_to"]}</td>'
         html += f'<td>{item["created_on"]}</td>'

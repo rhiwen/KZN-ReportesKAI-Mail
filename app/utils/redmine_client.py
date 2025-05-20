@@ -26,12 +26,12 @@ def get_projects():
     except ResourceBadMethodError:
         return redmine.project.all()
 
-
+# ["8-QA Procesos", "9-Realizado"]
 def safe_issues(project_id):
-    """Devuelve issues tipo 'KAI' excepto los que tienen estado 'QA Procesos' o 'Realizado'."""
+    """Devuelve issues tipo 'KAI' excepto los que tienen estado 'QA Procesos' o 'Realizado', ordenados por fecha de creación ascendente."""
     try:
-        issues = redmine.issue.filter(project_id=project_id)  # sin status_id
-        return [
+        issues = redmine.issue.filter(project_id=project_id)
+        filtered = [
             i for i in issues
             if any(
                 cf.name == "Tipo de tarea" and cf.value == "KAI"
@@ -39,9 +39,12 @@ def safe_issues(project_id):
             )
             and i.status.name not in ["8-QA Procesos", "9-Realizado"]
         ]
+        # verificar si el tipo de fecha de los issues es datetime
+        for issue in filtered:
+            print(type(issue.created_on), issue.created_on)
+        return sorted(filtered, key=lambda i: i.created_on.timestamp())
     except (ForbiddenError, ResourceNotFoundError):
         return []
-
 
 def _safe_assigned_to(issue):
     """Nombre del asignado o 'Sin asignar'."""
@@ -71,6 +74,7 @@ def process_projects(projects):
                 "task_id": f"#{issue.id}",
                 "project_name": project.name,
                 "title": issue.subject,
+                "priority": issue.priority.name,
                 "status": issue.status.name,
                 "assigned_to": _safe_assigned_to(issue),
                 "created_on": _format_date(getattr(issue, "created_on", None)),

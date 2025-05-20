@@ -38,8 +38,8 @@ def generate_report(send_email: bool = True, background_tasks: Optional[Backgrou
     html_content = data_to_html(data)
 
     if send_email:
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        subject = f"Reporte de Tareas KAI {timestamp}"
+        timestamp = datetime.now().strftime("%Y-%m-%d - %H%M")
+        subject = f"KZN KAI - Reporte Tickets de KAI Abiertos al {timestamp}"
         
         if background_tasks is not None:
             logging.info("📨 Programando envío de email (BackgroundTasks)…")
