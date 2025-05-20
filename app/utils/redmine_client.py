@@ -39,10 +39,10 @@ def safe_issues(project_id):
             )
             and i.status.name not in ["8-QA Procesos", "9-Realizado"]
         ]
-        # verificar si el tipo de fecha de los issues es datetime
-        for issue in filtered:
-            print(type(issue.created_on), issue.created_on)
-        return sorted(filtered, key=lambda i: i.created_on.timestamp())
+        # debug: Verificar si el problema está en que el tipo de fecha de los issues no es datetime
+        # for issue in filtered:
+        #    print(type(issue.created_on), issue.created_on)
+        return sorted(filtered, key=lambda i: i.created_on)
     except (ForbiddenError, ResourceNotFoundError):
         return []
 
@@ -78,7 +78,8 @@ def process_projects(projects):
                 "status": issue.status.name,
                 "assigned_to": _safe_assigned_to(issue),
                 "created_on": _format_date(getattr(issue, "created_on", None)),
-                "updated_on": _format_date(getattr(issue, "updated_on", None))
+                "updated_on": _format_date(getattr(issue, "updated_on", None)),
+                "created_on_datetime": getattr(issue, "created_on", None)
             })
-
-    return data
+    # Puede que éste sea el problema de los issues desordenados
+    return sorted(data, key=lambda item: item["created_on_datetime"] or datetime.min)
