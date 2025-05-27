@@ -39,9 +39,6 @@ def safe_issues(project_id):
             )
             and i.status.name not in ["8-QA Procesos", "9-Realizado"]
         ]
-        # debug: Verificar si el problema está en que el tipo de fecha de los issues no es datetime
-        # for issue in filtered:
-        #    print(type(issue.created_on), issue.created_on)
         return sorted(filtered, key=lambda i: i.created_on)
     except (ForbiddenError, ResourceNotFoundError):
         return []
@@ -61,6 +58,18 @@ def _format_date(date_obj):
     return "N/A"
 
 
+def _calculate_days_since(date_obj):
+    """Calcula días transcurridos desde una fecha."""
+    if date_obj:
+        today = datetime.now().date()
+        if hasattr(date_obj, 'date'):
+            date_only = date_obj.date()
+        else:
+            date_only = date_obj
+        return (today - date_only).days
+    return 0
+
+
 # ───── Procesamiento principal ─────────────────────────
 def process_projects(projects):
     data = []
@@ -69,6 +78,9 @@ def process_projects(projects):
         issues = safe_issues(project.id)
         
         for issue in issues:
+            created_on_date = getattr(issue, "created_on", None)
+            updated_on_date = getattr(issue, "updated_on", None)
+            
             # Por cada issue tipo KAI, creamos un registro en el formato solicitado
             data.append({
                 "task_id": f"#{issue.id}",
@@ -77,9 +89,13 @@ def process_projects(projects):
                 "priority": issue.priority.name,
                 "status": issue.status.name,
                 "assigned_to": _safe_assigned_to(issue),
-                "created_on": _format_date(getattr(issue, "created_on", None)),
-                "updated_on": _format_date(getattr(issue, "updated_on", None)),
-                "created_on_datetime": getattr(issue, "created_on", None)
+                "created_on": _format_date(created_on_date),
+                "updated_on": _format_date(updated_on_date),
+                "created_on_datetime": created_on_date,
+                "days_since_creation": _calculate_days_since(created_on_date),
+                "days_since_update": _calculate_days_since(updated_on_date),
+                "is_validation": issue.status.name == "7-Validar Cruzado"
             })
-    # Puede que éste sea el problema de los issues desordenados
+    
+    # Ordenar por fecha de creación
     return sorted(data, key=lambda item: item["created_on_datetime"] or datetime.min)

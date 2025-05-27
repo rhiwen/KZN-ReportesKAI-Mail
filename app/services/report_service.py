@@ -34,12 +34,15 @@ def generate_report(send_email: bool = True, background_tasks: Optional[Backgrou
         logging.exception("💥 Error inesperado: %s", e)
         raise
 
-    # Convertir datos directamente a HTML sin archivos intermedios
-    html_content = data_to_html(data)
+    # Generar título del reporte
+    timestamp = datetime.now().strftime("%Y-%m-%d - %H%M")
+    report_title = f"KZN KAI - Reporte Tickets de KAI Abiertos al {timestamp}"
+    
+    # Convertir datos directamente a HTML con título
+    html_content = data_to_html(data, report_title)
 
     if send_email:
-        timestamp = datetime.now().strftime("%Y-%m-%d - %H%M")
-        subject = f"KZN KAI - Reporte Tickets de KAI Abiertos al {timestamp}"
+        subject = report_title
         
         if background_tasks is not None:
             logging.info("📨 Programando envío de email (BackgroundTasks)…")
